@@ -6,10 +6,11 @@
 - All cloud actions retain preview/explicit confirmation, dangerous-name entry and backend authorization. Fixed cross-server async races, offline state races, malformed caches and refresh feedback. Independent review's F1 nullable NLB data, F2 resume refresh latch and F3 dismissed-overlay forward history were fixed and regressed.
 - Validation: 78 backend + 4 script tests, 41 Web tests, 7 mobile config tests, 7 Java unit tests; root reran 11 independent regression cases and 6 browser journeys. Nonzero scroll restored 2803→2803 with focus/filter preserved; all six actions keep two-stage confirmation. Tests use synthetic cloud only.
 - Root mobile/desktop light/dark screenshots and browser cold-offline/theme/logout journeys passed without JS errors or unintended execute requests. New assets index-CSzCXrRj.js/index-BIMUsZvL.css published; previous immutable assets remain for open old tabs. Public screenshots are synthetic.
-- Native App 7.1.2 back/resume and NativeChrome theme/inset bridge; sensitive logs/debugging stay disabled. CI now builds Android and runs API35 emulator Keystore/inset/real-IME tests; execution pending. No physical-device validation claimed.
+- Native App 7.1.2 back/resume and NativeChrome theme/inset bridge; sensitive logs/debugging stay disabled. CI API35 emulator passed all 5 Keystore/inset/real-IME tests (0 failures/skips), and 7 Java unit tests. No physical-device validation claimed.
 - Capacitor sync completed: all six final Web files match Android copies; App plugin is registered and generated Gradle dependencies are tracked. Public HTTPS health reports 0.2.0 and references final asset hashes.
 - Initial CI 37822998379 passed checks/Docker, but unqualified Android test tasks also built upstream Cordova template tests and hit mismatched Kotlin stdlibs. CI now targets :app tasks; own instrumentation remains required.
-- Next action: rerun CI, verify emulator/build results, locally sign with existing key and publish v0.2.0 APK; record final receipt separately. Runtime/signing material remains outside checkout.
+- Released v0.2.0 from 271722ce9345e1e74b467567e5861e54c34101ad; CI 37824528468 checks/Android/Docker all passed. Same-key signed APK is 3,070,144 bytes, SHA256 bdf214e1ee04c9a9e407652725a57a1cfb90e438131203f4bb1797e5597f493e. Anonymous public APK download checksum verified. Metadata: docs/releases/0.2.0.json. Runtime/signing material remains outside checkout.
+- Next action: user installs signed 0.2.0 over 0.1.0 and validates native navigation/appearance on their physical phone; browser update is already live.
 
 ## 0.1.0 implementation — 2026-10-08
 

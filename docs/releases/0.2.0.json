@@ -1,0 +1,47 @@
+{
+  "version": "0.2.0",
+  "sourceCommit": "271722ce9345e1e74b467567e5861e54c34101ad",
+  "ciRun": "https://github.com/SkySkin/oci-control/actions/runs/37824528468",
+  "releaseUrl": "https://github.com/SkySkin/oci-control/releases/tag/v0.2.0",
+  "artifact": "oci-control-0.2.0.apk",
+  "bytes": 3070144,
+  "sha256": "bdf214e1ee04c9a9e407652725a57a1cfb90e438131203f4bb1797e5597f493e",
+  "packageId": "com.ocicontrol.app",
+  "versionCode": 2,
+  "signerCertificateSha256": "af7923eebcdfa0b68f46708727cb14c6972c2c03825fc33fab469442980612b3",
+  "verifiedSignatureSchemes": [
+    "v1",
+    "v2",
+    "v3"
+  ],
+  "signing": "Locally signed with the same release key as 0.1.0; private material never uploaded",
+  "tests": {
+    "pythonAndScripts": 82,
+    "web": 41,
+    "mobileConfiguration": 7,
+    "javaUnit": 7,
+    "api35Instrumentation": 5,
+    "independentSynthetic": 11,
+    "independentBrowserJourneys": 6
+  },
+  "checks": [
+    "CI checks/Android/Docker successful",
+    "API35 real IME show/hide and WebView resize",
+    "API35 Keystore persistence and scoped removal",
+    "API35 synthetic inset, cutout and theme cases",
+    "Nonzero list scroll and focus restoration",
+    "Dismissed confirmation forward/back history",
+    "Six cloud actions require preview and explicit confirmation",
+    "Browser desktop/mobile light/dark",
+    "Cold offline reload and logout snapshot retention",
+    "Six CI/Android Web assets match reviewed build",
+    "Public HTTPS health and browser login",
+    "Anonymous public APK download checksum verified"
+  ],
+  "limits": [
+    "No physical Android device validation",
+    "Synthetic cutout dispatch is not a physical rotation test",
+    "No live OCI mutations used for tests",
+    "GB Months retains original Oracle units"
+  ]
+}
