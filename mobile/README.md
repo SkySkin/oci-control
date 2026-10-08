@@ -44,8 +44,8 @@ npm ci
 npm test
 npm run sync
 cd android
-./gradlew --no-daemon testDebugUnitTest assembleDebug assembleDebugAndroidTest assembleRelease
-./gradlew --no-daemon connectedDebugAndroidTest
+./gradlew --no-daemon :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest :app:assembleRelease
+./gradlew --no-daemon :app:connectedDebugAndroidTest
 ```
 
 最后一条需要设备或模拟器。CI 使用 API 35 google_apis x86_64、KVM、无界面

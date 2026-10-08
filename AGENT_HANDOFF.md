@@ -8,7 +8,8 @@
 - Root mobile/desktop light/dark screenshots and browser cold-offline/theme/logout journeys passed without JS errors or unintended execute requests. New assets index-CSzCXrRj.js/index-BIMUsZvL.css published; previous immutable assets remain for open old tabs. Public screenshots are synthetic.
 - Native App 7.1.2 back/resume and NativeChrome theme/inset bridge; sensitive logs/debugging stay disabled. CI now builds Android and runs API35 emulator Keystore/inset/real-IME tests; execution pending. No physical-device validation claimed.
 - Capacitor sync completed: all six final Web files match Android copies; App plugin is registered and generated Gradle dependencies are tracked. Public HTTPS health reports 0.2.0 and references final asset hashes.
-- Next action: push source to CI, verify emulator/build results, locally sign with existing key and publish v0.2.0 APK; record final receipt separately. Runtime/signing material remains outside checkout.
+- Initial CI 37822998379 passed checks/Docker, but unqualified Android test tasks also built upstream Cordova template tests and hit mismatched Kotlin stdlibs. CI now targets :app tasks; own instrumentation remains required.
+- Next action: rerun CI, verify emulator/build results, locally sign with existing key and publish v0.2.0 APK; record final receipt separately. Runtime/signing material remains outside checkout.
 
 ## 0.1.0 implementation — 2026-10-08
 
