@@ -1,0 +1,18 @@
+{
+  "appId": "com.ocicontrol.app",
+  "appName": "云境 OCI Control",
+  "webDir": "../web/dist",
+  "loggingBehavior": "none",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": false
+    }
+  }
+}

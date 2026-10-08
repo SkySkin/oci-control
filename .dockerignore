@@ -1,0 +1,22 @@
+# Allowlist the build context: local data, OCI keys, Android keys and git never enter it.
+*
+!Dockerfile
+!requirements.txt
+!server/
+!server/**
+!web/
+!web/**
+!scripts/
+!scripts/container-entrypoint.sh
+**/__pycache__/
+**/*.pyc
+**/node_modules/
+**/dist/
+**/.env*
+**/*.pem
+**/*.key
+**/*.hash
+**/*.sqlite*
+**/*.db
+**/*.jks
+**/*.keystore

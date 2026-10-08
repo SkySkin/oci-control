@@ -1,0 +1,34 @@
+services:
+  oci-control:
+    build: .
+    image: oci-control:0.1.0
+    init: true
+    restart: unless-stopped
+    ports:
+      - "${OCI_CONTROL_BIND_IP:-127.0.0.1}:${OCI_CONTROL_PORT:-8787}:8787"
+    environment:
+      OCI_CONTROL_DATA_DIR: /data
+      OCI_CONTROL_PUBLIC_URL: "${OCI_CONTROL_PUBLIC_URL:-}"
+      OCI_CONTROL_ALLOW_HTTP: "${OCI_CONTROL_ALLOW_HTTP:-false}"
+      OCI_CONTROL_MODE: "${OCI_CONTROL_MODE:-live}"
+      OCI_CONTROL_REFRESH_SECONDS: "${OCI_CONTROL_REFRESH_SECONDS:-300}"
+      OCI_CONFIG_FILE: /oci/config
+      OCI_PROFILE: "${OCI_PROFILE:-DEFAULT}"
+    volumes:
+      - state:/data
+      - type: bind
+        source: "${OCI_CONFIG_DIR:-${HOME}/.oci}"
+        target: /oci
+        read_only: true
+        bind:
+          create_host_path: false
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  state:

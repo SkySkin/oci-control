@@ -1,0 +1,20 @@
+{
+  "name": "oci-control-android",
+  "version": "0.1.0",
+  "private": true,
+  "description": "云境 OCI Control Android 原生客户端",
+  "scripts": {
+    "sync": "cap sync android",
+    "open": "cap open android",
+    "test": "node --test tests/*.test.mjs",
+    "build:debug": "npm run sync && cd android && ./gradlew testDebugUnitTest assembleDebug",
+    "build:release": "npm run sync && cd android && ./gradlew testDebugUnitTest assembleRelease"
+  },
+  "dependencies": {
+    "@capacitor/android": "7.6.9",
+    "@capacitor/core": "7.6.9"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "7.6.9"
+  }
+}

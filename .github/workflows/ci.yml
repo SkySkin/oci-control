@@ -1,0 +1,164 @@
+name: Checks and Android APK
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      signed_release:
+        description: '使用已配置的 Android Secrets 构建签名 release APK'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            mobile/package-lock.json
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m pytest -q
+        env:
+          OCI_CONTROL_MODE: demo
+          OCI_CONTROL_DATA_DIR: ${{ runner.temp }}/oci-control-test-state
+      - run: python -m pytest -q scripts/tests
+      - run: python scripts/secret-audit.py
+      - run: npm ci --prefix web --no-fund
+      - run: npm test --prefix web
+      - run: npm run build --prefix web
+      - run: npm ci --prefix mobile --no-fund
+      - run: npm test --prefix mobile
+      - name: Validate shell scripts and Compose
+        run: |
+          bash -n scripts/install-native.sh scripts/run-native.sh
+          sh -n scripts/container-entrypoint.sh
+          docker compose config --quiet
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: web/dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  docker:
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and verify non-root runtime dependencies
+        run: |
+          docker build --tag oci-control:ci .
+          docker run --rm --entrypoint python oci-control:ci -c 'import os, fastapi, uvicorn, oci, server.app, server.__main__; assert os.getuid() == 10001'
+          docker run --rm --entrypoint oci oci-control:ci --version
+          docker run --rm --entrypoint python oci-control:ci -c 'from pathlib import Path; assert Path("/app/web/dist/index.html").is_file()'
+      - name: Start isolated demo service with persistent state
+        run: |
+          docker volume create oci-control-ci-state
+          trap 'docker rm -f oci-control-ci >/dev/null 2>&1 || true; docker volume rm oci-control-ci-state >/dev/null 2>&1 || true' EXIT
+          docker run --rm -v oci-control-ci-state:/data --entrypoint python oci-control:ci -c 'from pathlib import Path; from server.security import make_password_hash; p=Path("/data/password.hash"); p.write_text(make_password_hash("synthetic-ci-panel-password")); p.chmod(0o600)'
+          docker run -d --name oci-control-ci --read-only --tmpfs /tmp -v oci-control-ci-state:/data -e OCI_CONTROL_MODE=demo -e OCI_CONTROL_PUBLIC_URL=http://127.0.0.1:8787 -e OCI_CONTROL_ALLOW_HTTP=true oci-control:ci
+          docker exec -i oci-control-ci python - < scripts/container-smoke.py
+
+  android:
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: web/dist
+      - run: npm ci --prefix mobile --no-fund
+      - run: npm run sync --prefix mobile
+      - name: Unit tests, debug APK and unsigned release APK
+        working-directory: mobile/android
+        run: ./gradlew --no-daemon testDebugUnitTest assembleDebug assembleRelease
+      - name: Verify unsigned release alignment and compute checksum
+        run: |
+          "$ANDROID_HOME/build-tools/35.0.0/zipalign" -c -P 16 -v 4 mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk
+          mkdir -p unsigned-release-artifacts
+          cp mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk unsigned-release-artifacts/app-release-unsigned.apk
+          cd unsigned-release-artifacts
+          sha256sum app-release-unsigned.apk > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oci-control-0.1.0-unsigned-release-apk
+          path: unsigned-release-artifacts/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Label artifact and compute checksum
+        run: |
+          mkdir -p artifacts
+          cp mobile/android/app/build/outputs/apk/debug/app-debug.apk artifacts/oci-control-0.1.0-debug.apk
+          cd artifacts
+          sha256sum oci-control-0.1.0-debug.apk > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oci-control-0.1.0-debug-apk
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Optional signed release APK
+        if: github.event_name == 'workflow_dispatch' && inputs.signed_release && github.ref == 'refs/heads/main'
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -eu
+          umask 077
+          : "${ANDROID_KEYSTORE_BASE64:?Missing Android signing secret}"
+          : "${ANDROID_KEYSTORE_PASSWORD:?Missing Android signing secret}"
+          : "${ANDROID_KEY_ALIAS:?Missing Android signing secret}"
+          : "${ANDROID_KEY_PASSWORD:?Missing Android signing secret}"
+          export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/oci-control-release.jks"
+          trap 'rm -f "$ANDROID_KEYSTORE_PATH"' EXIT
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$ANDROID_KEYSTORE_PATH"
+          unset ANDROID_KEYSTORE_BASE64
+          cd mobile/android
+          ./gradlew --no-daemon assembleRelease
+          cd ../..
+          mkdir -p release-artifacts
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk release-artifacts/oci-control-0.1.0.apk
+          cd release-artifacts
+          sha256sum oci-control-0.1.0.apk > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'workflow_dispatch' && inputs.signed_release && github.ref == 'refs/heads/main'
+        with:
+          name: oci-control-0.1.0-signed-release-apk
+          path: release-artifacts/
+          if-no-files-found: error
+          retention-days: 14

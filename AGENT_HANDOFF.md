@@ -1,0 +1,10 @@
+# OCI Control handoff
+
+## 0.1.0 implementation — 2026-10-08
+
+- Python/FastAPI service, Chinese React web, Capacitor Android app, Docker/native installers and Chinese deployment docs are complete. OCI adapters scan authorized regions/compartments, retrieve cost/monitoring/official outbound usage, and support six confirmed operations.
+- API keys remain server-side; browser HttpOnly cookie, native Keystore token, persisted/revocable sessions, account-scoped timestamped offline snapshots. Android bridge logs and WebView debugging disabled. Confirmation is bound to session/current resource ETag; audit intent and execution claim are atomic, interrupted outcomes remain visible as unknown.
+- Official `GB Months` usage remains in its original unit when byte conversion is not verified; no assumption about account-specific free allowance. Empty/partial results are explicit. No live cloud mutations were used for verification.
+- Verification: 82 Python tests, 20 frontend tests, 4 mobile configuration tests and 3 crypto unit tests passed. Desktop/mobile browser inspection and cold offline reload passed; dependency/public-source audits passed. Real authorized read-only collection and action preview succeeded without publishing account identifiers or snapshots.
+- Four independent-review findings were corrected: Android debug logging, stale cross-server login completion, cross-account settings fallback, and interrupted-operation audit durability. Regression tests are included.
+- Next action: complete GitHub CI, verify/sign the unsigned Android release artifact locally, publish the signed APK and record its checksum. Signing material and deployment receipts must stay outside the repository.

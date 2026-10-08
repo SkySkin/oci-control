@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-08T16:23:00Z",
+  "title": "Design System: 云境 OCI Control",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Ice blue" },
+      "secondary": { "role": "secondary", "displayName": "Signal teal" },
+      "canvas": { "role": "neutral", "displayName": "Navy slate" }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Console heading", "purpose": "Page titles, compact and balanced." },
+      "body": { "displayName": "Operational copy", "purpose": "Chinese instruction and resource content." }
+    },
+    "shadows": [
+      { "name": "dialog", "value": "0 26px 95px #0007", "purpose": "Protected focus for confirmed operations." },
+      { "name": "notification", "value": "0 10px 32px #0004", "purpose": "Temporary feedback over the workspace." }
+    ],
+    "motion": [
+      { "name": "control-state", "value": "150ms", "purpose": "Color response to interaction; disabled with reduced motion." }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "760px" },
+      { "name": "compact-desktop", "value": "1000px" },
+      { "name": "desktop", "value": "1200px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary button", "kind": "button", "refersTo": "button-primary", "description": "Main confirmation or connection action.",
+      "html": "<button class=\"ds-primary\">确认执行</button>",
+      "css": ".ds-primary{background:var(--blue,#a2dbee);color:#102330;border:1px solid transparent;border-radius:7px;min-height:44px;padding:10px 16px;font:600 13px sans-serif;cursor:pointer;transition:background-color 150ms}.ds-primary:hover{background:#c5edfa}.ds-primary:focus-visible{outline:2px solid #a2dbee;outline-offset:4px}.ds-primary:disabled{opacity:.48;cursor:not-allowed}"
+    },
+    {
+      "name": "Secondary button", "kind": "button", "refersTo": "button-secondary", "description": "Refresh, cancel and secondary operations.",
+      "html": "<button class=\"ds-secondary\">刷新快照</button>",
+      "css": ".ds-secondary{background:#132131;color:#e8f0f7;border:1px solid #3a4e63;border-radius:7px;min-height:44px;padding:10px 16px;font:600 13px sans-serif;cursor:pointer}.ds-secondary:hover{background:#1a2b3d;border-color:#60788f}.ds-secondary:focus-visible{outline:2px solid #a2dbee;outline-offset:4px}"
+    },
+    {
+      "name": "Server field", "kind": "input", "description": "Explicitly labelled connection input.",
+      "html": "<label class=\"ds-field\">服务器地址<input type=\"url\" placeholder=\"https://cloud.example.com\"></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:10px;color:#e8f0f7;font:550 12px sans-serif}.ds-field input{background:#101b29;color:#e8f0f7;border:1px solid #50657b;border-radius:6px;min-height:48px;padding:0 13px;font:14px sans-serif}.ds-field input:focus-visible{outline:2px solid #a2dbee;outline-offset:4px}.ds-field input::placeholder{color:#93a5ba}"
+    },
+    {
+      "name": "Navigation", "kind": "nav", "description": "Selected workspace destination.",
+      "html": "<button class=\"ds-nav\" aria-current=\"page\">资源</button>",
+      "css": ".ds-nav{display:block;min-width:150px;min-height:48px;text-align:left;padding:13px 15px;border:1px solid #2b4558;border-radius:7px;background:#182d3d;color:#bde7f5;font:13px sans-serif;cursor:pointer}.ds-nav:hover{background:#1a2b3d}.ds-nav:focus-visible{outline:2px solid #a2dbee;outline-offset:4px}"
+    },
+    {
+      "name": "Resource status", "kind": "chip", "description": "Text remains explicit alongside state color.",
+      "html": "<span class=\"ds-status\"><i></i>运行中</span>",
+      "css": ".ds-status{display:inline-flex;align-items:center;gap:6px;background:#18352f;color:#95ddc7;padding:4px 8px;border-radius:5px;font:10px sans-serif;min-height:25px}.ds-status i{width:4px;height:4px;border-radius:50%;background:currentColor}"
+    },
+    {
+      "name": "Data panel", "kind": "card", "refersTo": "panel", "description": "Quiet grouping for related operational data.",
+      "html": "<section class=\"ds-panel\"><h2>资源一览</h2><p>最近采集的资源状态</p></section>",
+      "css": ".ds-panel{background:#111d2b;color:#e8f0f7;border:1px solid #28394c;border-radius:12px;padding:22px 24px}.ds-panel h2{font:650 16px sans-serif;margin:0}.ds-panel p{font:11px sans-serif;color:#9bacbf;margin:9px 0 0}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Regional routing atlas",
+    "overview": "A calm, Chinese-language operational surface. Restrained navy planes, precise connector lines and aligned resource rows make regional inventory understandable. Expression belongs to the region diagram and the quiet cyan/teal accents. Runtime resource data supplies the content.",
+    "keyCharacteristics": ["Dark slate planes with meaningful borders and no ambient glow.", "Clear selected context, consistent icon strokes and tabular numerals.", "Explicit timestamps and visibly distinct offline, demo and unavailable states."],
+    "rules": [
+      { "name": "The Data State Rule", "body": "Styling must distinguish actual zero, unavailable values, sampled monitoring and Oracle raw measurement.", "section": "colors" },
+      { "name": "The Context Rule", "body": "Region selection filters resources without inventing geographic coordinates.", "section": "layout" }
+    ],
+    "dos": ["Preserve stable alignment, Chinese control labels and keyboard focus.", "Keep actual units and independent observation timestamps visible.", "Respect reduced motion and native safe areas."],
+    "donts": ["Add fake telemetry, decorative mini-charts or geographic locations.", "Imply monitoring is billable traffic, or forecasts enforce hard caps.", "Remove the offline and demo provenance banners."]
+  }
+}
