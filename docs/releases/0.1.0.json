@@ -1,0 +1,15 @@
+{
+  "version": "0.1.0",
+  "sourceCommit": "93b76ab4653330744d9437cc8550224d4930f409",
+  "ciRun": "https://github.com/SkySkin/oci-control/actions/runs/37811019095",
+  "releaseUrl": "https://github.com/SkySkin/oci-control/releases/tag/v0.1.0",
+  "artifact": "oci-control-0.1.0.apk",
+  "bytes": 3136145,
+  "sha256": "4be2d94ef397c53d2318f5b25f56ad395826a9093b9aa261417b7fd5f07531ef",
+  "signerCertificateSha256": "af7923eebcdfa0b68f46708727cb14c6972c2c03825fc33fab469442980612b3",
+  "verifiedSignatureSchemes": ["v1", "v2", "v3"],
+  "signing": "Locally signed; no private signing material uploaded",
+  "tests": {"python": 82, "web": 20, "mobileConfiguration": 4, "crypto": 3},
+  "checks": ["CI successful", "Docker authentication smoke", "desktop/mobile browser", "web cold offline reload", "real read-only OCI collection", "real action preview without execution", "production session persistence", "public APK download checksum"],
+  "limits": ["No physical Android device validation", "No live OCI mutations used for tests", "GB Months retained as original Oracle unit", "Account-specific free allowance and forecasts are not inferred"]
+}
