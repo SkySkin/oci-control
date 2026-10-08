@@ -1,5 +1,15 @@
 # OCI Control handoff
 
+## 0.2.0 interface and interaction release — 2026-10-08
+
+- Fluxdo/Material 3 inspired shared Web/Android interface; user confirmed system/light/dark themes. Dedicated resource pages, preserved source route/filter/scroll/focus, persistent detail AppBar and adaptive desktop/mobile navigation.
+- All cloud actions retain preview/explicit confirmation, dangerous-name entry and backend authorization. Fixed cross-server async races, offline state races, malformed caches and refresh feedback. Independent review's F1 nullable NLB data, F2 resume refresh latch and F3 dismissed-overlay forward history were fixed and regressed.
+- Validation: 78 backend + 4 script tests, 41 Web tests, 7 mobile config tests, 7 Java unit tests; root reran 11 independent regression cases and 6 browser journeys. Nonzero scroll restored 2803→2803 with focus/filter preserved; all six actions keep two-stage confirmation. Tests use synthetic cloud only.
+- Root mobile/desktop light/dark screenshots and browser cold-offline/theme/logout journeys passed without JS errors or unintended execute requests. New assets index-CSzCXrRj.js/index-BIMUsZvL.css published; previous immutable assets remain for open old tabs. Public screenshots are synthetic.
+- Native App 7.1.2 back/resume and NativeChrome theme/inset bridge; sensitive logs/debugging stay disabled. CI now builds Android and runs API35 emulator Keystore/inset/real-IME tests; execution pending. No physical-device validation claimed.
+- Capacitor sync completed: all six final Web files match Android copies; App plugin is registered and generated Gradle dependencies are tracked. Public HTTPS health reports 0.2.0 and references final asset hashes.
+- Next action: push source to CI, verify emulator/build results, locally sign with existing key and publish v0.2.0 APK; record final receipt separately. Runtime/signing material remains outside checkout.
+
 ## 0.1.0 implementation — 2026-10-08
 
 - Python/FastAPI service, Chinese React web, Capacitor Android app, Docker/native installers and Chinese deployment docs are complete. OCI adapters scan authorized regions/compartments, retrieve cost/monitoring/official outbound usage, and support six confirmed operations.

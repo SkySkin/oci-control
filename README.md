@@ -2,7 +2,7 @@
 
 面向个人和小团队的 Oracle Cloud Infrastructure 运维面板。一个自托管 Python 服务、一套中文网页，以及可连接自有服务器的 Android 客户端。独立开源项目，与 Oracle 无隶属关系。
 
-当前版本 **0.1.0**。它将多区域资源、费用与流量观测放在同一界面，并为受支持的操作提供预览、确认与审计。离线时仍可查看带采集时间的历史快照。
+当前版本 **0.2.0**。采用受 Fluxdo 启发的 Material 3 风格，网页与 Android 共用组件，支持跟随系统或手动切换浅色／深色。它将多区域资源、费用与流量观测放在同一界面，并为受支持的操作提供预览、确认与审计。离线时仍可查看带采集时间的历史快照。
 
 [Android 安装包](https://github.com/SkySkin/oci-control/releases) · [中文安装文档](docs/INSTALL.md) · [数据口径与权限](docs/OCI.md)
 
@@ -14,6 +14,7 @@
 - 查看月度费用、服务费用、监控流量估算和官方出站原始计量（含零费用用量）；缺失数据保持“未知”，不会伪装成零。
 - 在服务端授权范围内启动、停止、重启和重命名实例，启用或停用 NLB 后端；操作必须先预览并确认，危险操作要求输入资源名。
 - 网页使用 HttpOnly 会话 Cookie；Android 使用原生 HTTP 和 Keystore 加密保存的会话凭证。OCI API 密钥始终保留在服务端。
+- 资源打开独立详情页，返回原页面并恢复列表位置；手机底部导航、桌面侧边导航分别适配。Android 返回键优先关闭弹窗，再返回详情来源和总览。
 - 保留按服务器身份隔离的快照；退出撤销当前会话、保留快照，另有“清除本地数据”。离线不能执行或排队云操作。
 
 这不是任意 OCI CLI 执行器，不提供删除实例、任意脚本或任意 OCI 方法调用入口。所有云操作都受 OCI IAM 权限约束。
@@ -68,11 +69,11 @@ Compose 默认只发布到 `127.0.0.1:8787`。局域网/IP 访问需显式设置
 
 日常使用请从 [Releases](https://github.com/SkySkin/oci-control/releases) 下载维护者签名的 APK，并核对同一发布中的 SHA256SUMS。正式包使用固定签名与包名 `com.ocicontrol.app`，后续同签名版本可覆盖升级并保留应用数据。
 
-开发测试也可从本仓库 GitHub Actions 的 **Checks and Android APK** 成功运行中下载 `oci-control-0.1.0-debug-apk`。这是 **调试构建**，应用名带“调试版”，包名为 `com.ocicontrol.app.debug`，每次构建不保证相同签名。安装来源需由你在 Android 系统中允许。
+开发测试也可从本仓库 GitHub Actions 的 **Checks and Android APK** 成功运行中下载 `oci-control-0.2.0-debug-apk`。这是 **调试构建**，应用名带“调试版”，包名为 `com.ocicontrol.app.debug`，每次构建不保证相同签名。安装来源需由你在 Android 系统中允许。
 
 应用内填写面板服务地址，例如 `https://oci.example.com`，然后输入面板密码。连接 `http://IP:端口` 时必须确认风险并显式允许：HTTP 上的密码、会话和资源数据没有传输加密，只适合可信网络。Android 上的 `127.0.0.1` 指向手机自身，请使用手机能够访问的服务器地址。
 
-APK 内置网页，不依赖外部网页启动。首次登录后可在网络中断时查看最近快照及采集时间；它不是实时云状态。退出会撤销在线会话并保留本地快照；断网时无法确认撤销，需恢复连接后重试退出。清除本地数据可移除本机保留的快照。正式发布包使用独立包名 `com.ocicontrol.app`：CI 默认另产出 `oci-control-0.1.0-unsigned-release-apk`，由维护者下载后在本地签名，签名私钥不上传 GitHub。未签名 APK 不能直接安装，见 [Android 构建与本地签名](docs/INSTALL.md#android-构建)。
+APK 内置网页，不依赖外部网页启动。首次登录后可在网络中断时查看最近快照及采集时间；它不是实时云状态。退出会撤销在线会话并保留本地快照；断网时无法确认撤销，需恢复连接后重试退出。清除本地数据可移除本机保留的快照。正式发布包使用独立包名 `com.ocicontrol.app`：CI 默认另产出 `oci-control-0.2.0-unsigned-release-apk`，由维护者下载后在本地签名，签名私钥不上传 GitHub。未签名 APK 不能直接安装，见 [Android 构建与本地签名](docs/INSTALL.md#android-构建)。
 
 ## 费用、免费额度与安全边界
 

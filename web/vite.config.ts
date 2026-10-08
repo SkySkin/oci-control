@@ -32,5 +32,5 @@ self.addEventListener('fetch', event => {
     },
   }],
   server: { proxy: { '/api': 'http://127.0.0.1:8787' } },
-  test: { environment: 'jsdom', clearMocks: true },
+  test: { environment: 'jsdom', clearMocks: true, setupFiles: ['./src/test-setup.ts'] },
 });

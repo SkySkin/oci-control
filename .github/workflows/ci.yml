@@ -20,6 +20,8 @@ concurrency:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    outputs:
+      app_version: ${{ steps.mobile-version.outputs.version }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -34,6 +36,15 @@ jobs:
           cache-dependency-path: |
             web/package-lock.json
             mobile/package-lock.json
+      - name: Read Android artifact version
+        id: mobile-version
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const { version } = require('./mobile/package.json');
+          if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error('Invalid Android version');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\n`);
+          NODE
       - run: python -m pip install -r requirements-dev.txt
       - run: python -m pytest -q
         env:
@@ -53,7 +64,7 @@ jobs:
           docker compose config --quiet
       - uses: actions/upload-artifact@v4
         with:
-          name: web-dist
+          name: web-dist-${{ steps.mobile-version.outputs.version }}
           path: web/dist/
           if-no-files-found: error
           retention-days: 7
@@ -80,8 +91,11 @@ jobs:
 
   android:
     needs: checks
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Canonical APK build: Linux x64 with JDK 21 (Android build tools are x64).
+    runs-on: ubuntu-24.04
+    env:
+      APP_VERSION: ${{ needs.checks.outputs.app_version }}
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -93,6 +107,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+          architecture: x64
       - uses: android-actions/setup-android@v3
         with:
           packages: platform-tools
@@ -101,36 +116,73 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - uses: actions/download-artifact@v4
         with:
-          name: web-dist
+          name: web-dist-${{ needs.checks.outputs.app_version }}
           path: web/dist
       - run: npm ci --prefix mobile --no-fund
       - run: npm run sync --prefix mobile
-      - name: Unit tests, debug APK and unsigned release APK
+      - name: Unit tests, debug APK, device-test APK and unsigned release APK
         working-directory: mobile/android
-        run: ./gradlew --no-daemon testDebugUnitTest assembleDebug assembleRelease
+        run: ./gradlew --no-daemon testDebugUnitTest assembleDebug assembleDebugAndroidTest assembleRelease
+      - name: Enable KVM for the Android emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run synthetic native bridge regressions on Android 15
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          avd-name: oci-control-api35
+          disable-animations: true
+          enable-hw-keyboard: false
+          working-directory: mobile/android
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: |
+            adb shell settings put secure show_ime_with_hard_keyboard 1
+            ./gradlew --no-daemon connectedDebugAndroidTest
       - name: Verify unsigned release alignment and compute checksum
         run: |
           "$ANDROID_HOME/build-tools/35.0.0/zipalign" -c -P 16 -v 4 mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk
           mkdir -p unsigned-release-artifacts
-          cp mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk unsigned-release-artifacts/app-release-unsigned.apk
+          cp mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk "unsigned-release-artifacts/oci-control-${APP_VERSION}-unsigned.apk"
           cd unsigned-release-artifacts
-          sha256sum app-release-unsigned.apk > SHA256SUMS
+          sha256sum "oci-control-${APP_VERSION}-unsigned.apk" > SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
-          name: oci-control-0.1.0-unsigned-release-apk
+          name: oci-control-${{ needs.checks.outputs.app_version }}-unsigned-release-apk
           path: unsigned-release-artifacts/
           if-no-files-found: error
           retention-days: 14
       - name: Label artifact and compute checksum
         run: |
           mkdir -p artifacts
-          cp mobile/android/app/build/outputs/apk/debug/app-debug.apk artifacts/oci-control-0.1.0-debug.apk
+          cp mobile/android/app/build/outputs/apk/debug/app-debug.apk "artifacts/oci-control-${APP_VERSION}-debug.apk"
           cd artifacts
-          sha256sum oci-control-0.1.0-debug.apk > SHA256SUMS
+          sha256sum "oci-control-${APP_VERSION}-debug.apk" > SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
-          name: oci-control-0.1.0-debug-apk
+          name: oci-control-${{ needs.checks.outputs.app_version }}-debug-apk
           path: artifacts/
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: oci-control-${{ needs.checks.outputs.app_version }}-native-test-results
+          path: |
+            mobile/android/app/build/test-results/testDebugUnitTest/
+            mobile/android/app/build/outputs/androidTest-results/connected/
+            mobile/android/app/build/reports/androidTests/connected/
+          if-no-files-found: warn
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          # Preserve the exact synthetic tests executed by the API 35 emulator job.
+          name: oci-control-${{ needs.checks.outputs.app_version }}-device-test-apk
+          path: mobile/android/app/build/outputs/apk/androidTest/debug/*.apk
           if-no-files-found: error
           retention-days: 14
       - name: Optional signed release APK
@@ -155,13 +207,13 @@ jobs:
           ./gradlew --no-daemon assembleRelease
           cd ../..
           mkdir -p release-artifacts
-          cp mobile/android/app/build/outputs/apk/release/app-release.apk release-artifacts/oci-control-0.1.0.apk
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk "release-artifacts/oci-control-${APP_VERSION}.apk"
           cd release-artifacts
-          sha256sum oci-control-0.1.0.apk > SHA256SUMS
+          sha256sum "oci-control-${APP_VERSION}.apk" > SHA256SUMS
       - uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch' && inputs.signed_release && github.ref == 'refs/heads/main'
         with:
-          name: oci-control-0.1.0-signed-release-apk
+          name: oci-control-${{ needs.checks.outputs.app_version }}-signed-release-apk
           path: release-artifacts/
           if-no-files-found: error
           retention-days: 14

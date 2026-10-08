@@ -1,6 +1,6 @@
 {
   "name": "oci-control-web",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,8 +10,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@capacitor/app": "7.1.2",
     "@capacitor/core": "7.6.9",
-    "@fontsource-variable/manrope": "^5.2.8",
     "lucide-react": "^0.468.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"

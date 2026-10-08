@@ -44,3 +44,42 @@ test('Capacitor packages are aligned to one v7 version', () => {
   assert.equal(new Set(versions).size, 1);
   assert.match(versions[0], /^7\.\d+\.\d+$/);
 });
+
+test('official App lifecycle and back handler is pinned to the agreed v7 bridge', () => {
+  const pkg = JSON.parse(read('package.json'));
+  const lock = JSON.parse(read('package-lock.json'));
+  assert.equal(pkg.dependencies['@capacitor/app'], '7.1.2');
+  assert.equal(lock.packages['node_modules/@capacitor/app'].version, '7.1.2');
+  const config = JSON.parse(read('capacitor.config.json'));
+  assert.notEqual(config.plugins.App?.disableBackButtonHandler, true);
+  const activity = read('android/app/src/main/java/com/ocicontrol/app/MainActivity.java');
+  assert.match(activity, /registerPlugin\(SecureSessionPlugin.class\)/);
+  assert.match(activity, /registerPlugin\(NativeChromePlugin.class\)/);
+});
+
+test('native insets have one owner and retain IME resize on all supported Android versions', () => {
+  const config = JSON.parse(read('capacitor.config.json'));
+  assert.equal(config.android.adjustMarginsForEdgeToEdge, 'disable');
+  const manifest = read('android/app/src/main/AndroidManifest.xml');
+  assert.match(manifest, /android:windowSoftInputMode="adjustResize"/);
+  assert.doesNotMatch(manifest, /adjustPan|adjustNothing/);
+  const styles = read('android/app/src/main/res/values/styles.xml');
+  assert.doesNotMatch(styles, /windowOptOutEdgeToEdgeEnforcement|windowTranslucentStatus|windowFullscreen/);
+  assert.match(styles, /Theme.AppCompat.DayNight.NoActionBar/);
+  for (const qualifier of ['values', 'values-night']) {
+    const colors = read(`android/app/src/main/res/${qualifier}/colors.xml`);
+    assert.match(colors, /name="chrome_background"/);
+    assert.match(colors, new RegExp(`name="chrome_light">${qualifier === 'values'}</bool>`));
+  }
+});
+
+test('Android package, lockfile, and install version advance together', () => {
+  const pkg = JSON.parse(read('package.json'));
+  const lock = JSON.parse(read('package-lock.json'));
+  assert.equal(pkg.version, '0.2.0');
+  assert.equal(lock.version, pkg.version);
+  assert.equal(lock.packages[''].version, pkg.version);
+  const gradle = read('android/app/build.gradle');
+  assert.match(gradle, /versionCode 2\b/);
+  assert.ok(gradle.includes(`versionName "${pkg.version}"`));
+});

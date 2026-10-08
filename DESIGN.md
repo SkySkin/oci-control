@@ -1,39 +1,60 @@
 ---
 name: 云境 OCI Control
-description: A restrained regional routing atlas for cloud operations.
+description: A Chinese cloud operations app with Fluxdo-inspired Material 3 tonal surfaces.
 colors:
-  primary: "#a2dbee"
-  secondary: "#88d7c1"
-  canvas: "#0c1420"
-  navigation: "#0a121c"
-  surface: "#111d2b"
-  raised-surface: "#162536"
-  divider: "#28394c"
-  foreground: "#e8f0f7"
-  secondary-text: "#9bacbf"
-  warning: "#eac18b"
-  danger: "#f0a3a9"
+  primary: "#246580"
+  primary-container: "#d4eaf6"
+  canvas: "#f7f9fc"
+  navigation: "#edf1f5"
+  surface: "#ffffff"
+  raised-surface: "#eaf0f5"
+  divider: "#c4cdd5"
+  foreground: "#18232c"
+  secondary-text: "#52616d"
+  success: "#216653"
+  warning: "#78551c"
+  danger: "#a02c3b"
+  dark-primary: "#9ecfe6"
+  dark-primary-container: "#244b5f"
+  dark-canvas: "#101418"
+  dark-navigation: "#191f24"
+  dark-surface: "#1b2228"
+  dark-raised-surface: "#252e36"
+  dark-divider: "#53616c"
+  dark-foreground: "#e2e8ee"
+  dark-secondary-text: "#acbac5"
+  dark-success: "#99d5bd"
+  dark-warning: "#ebc17d"
+  dark-danger: "#ffb2bb"
 typography:
   headline:
-    fontFamily: "Manrope Variable, PingFang SC, Microsoft YaHei, Noto Sans CJK SC, sans-serif"
+    fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Noto Sans, PingFang SC, Microsoft YaHei, sans-serif"
     fontSize: "28px"
-    fontWeight: 640
+    fontWeight: 650
     lineHeight: 1.4
-    letterSpacing: "-0.035em"
+    letterSpacing: "-0.02em"
   title:
-    fontFamily: "Manrope Variable, PingFang SC, Microsoft YaHei, Noto Sans CJK SC, sans-serif"
-    fontSize: "16px"
+    fontFamily: "system-ui, sans-serif"
+    fontSize: "20px"
     fontWeight: 650
     lineHeight: 1.5
   body:
-    fontFamily: "Manrope Variable, PingFang SC, Microsoft YaHei, Noto Sans CJK SC, sans-serif"
-    fontSize: "13px"
+    fontFamily: "system-ui, sans-serif"
+    fontSize: "16px"
+    fontWeight: 400
+    lineHeight: 1.6
+  supporting:
+    fontFamily: "system-ui, sans-serif"
+    fontSize: "15px"
     fontWeight: 400
     lineHeight: 1.75
 rounded:
-  control: "7px"
-  panel: "12px"
-  dialog: "15px"
+  field: "16px"
+  row-edge: "16px"
+  panel: "24px"
+  compact-panel: "20px"
+  dialog: "28px"
+  control: "24px"
 spacing:
   compact: "8px"
   group: "16px"
@@ -42,15 +63,16 @@ spacing:
 components:
   button-primary:
     backgroundColor: "{colors.primary}"
-    textColor: "#102330"
+    textColor: "#ffffff"
     rounded: "{rounded.control}"
-    padding: "10px 16px"
-    height: "44px"
+    padding: "11px 20px"
+    height: "48px"
   button-secondary:
-    backgroundColor: "#132131"
-    textColor: "{colors.foreground}"
+    backgroundColor: "{colors.primary-container}"
+    textColor: "{colors.primary}"
     rounded: "{rounded.control}"
-    padding: "10px 16px"
+    padding: "11px 20px"
+    height: "48px"
   panel:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.foreground}"
@@ -59,54 +81,58 @@ components:
 
 ## Overview
 
-**Creative North Star: "Regional routing atlas"**
+The user selected Fluxdo's native Material 3 direction. OCI Control applies its tonal hierarchy, grouped rows, readable system typography, clear AppBar and selected navigation capsules to the existing React interface. All browser and Android pages share this system. The reference was inspected read-only; no Flutter implementation, code or visual asset is copied.
 
-A calm, Chinese-language operational surface. Restrained navy planes, precise connector lines and aligned resource rows make regional inventory understandable. Expression belongs to the region diagram and the quiet cyan/teal accents. Runtime resource data supplies the content.
-
-**Key Characteristics:**
-- Dark slate planes with meaningful borders and no ambient glow.
-- Clear selected context, consistent icon strokes and tabular numerals.
-- Explicit timestamps and visibly distinct offline, demo and unavailable states.
+The product remains an operational tool. Muted ocean accents carry selection, focus and primary actions; resource names, timestamps and operational state carry the screen. The existing geometric cloud mark remains the product identity.
 
 ## Colors
 
-Primary ice blue identifies navigation, focus and confirmation controls. Teal indicates successful or healthy state. Amber identifies uncertainty and incomplete information; red identifies failed or risky actions. Status always includes words as well as color.
+Theme defaults to the device preference. Settings offers **跟随系统 / 浅色 / 深色**, stored as a nonsecret local preference. Both themes use semantic CSS variables; the browser chrome and Android NativeChrome receive the resolved page background.
 
-**The Data State Rule.** Styling must distinguish actual zero, unavailable values, sampled monitoring and Oracle raw measurement. Never turn unknown values into reassuring empty charts or totals.
+Canvas, navigation, panel and raised control surfaces form a restrained tonal stack. Selection uses the primary container, and status uses distinct success, warning and danger containers. Status always includes readable words.
+
+**The Data State Rule.** An unavailable metric stays unavailable. Theme, charts and labels must distinguish actual zero, estimated monitoring and official raw measurement without implying a quota guarantee.
 
 ## Typography
 
-Manrope Variable is bundled locally for Latin lettering and measured numerals. Chinese uses the platform's readable CJK sans family. Headings are medium-weight and compact; numbers use tabular spacing. Long names wrap in details and shorten only in resource rows where the complete name remains available through selection.
+Use built-in system fonts; no display-font download. Body and task instructions are 15–16px, page titles are 28px on desktop and 24px on mobile, and supporting metadata is 13px. Navigation labels are compact enough for five mobile destinations. Form controls use 16px to preserve mobile browser usability. Numeric data uses tabular figures.
 
-Body copy and forms are larger than ancillary timestamps and chart ticks. Mobile password inputs are 16px to preserve browser usability. Metadata is intentionally compact in this first console version; do not reduce it further.
+Long resource names truncate in the resource list and wrap in the independent detail page. Prose stays within 75 characters where space permits. Do not reduce task text to fit small screens; rearrange the layout.
 
 ## Layout
 
-Desktop uses a 212px navigation rail and a fluid content plane, capped at 1650px. Section spacing is generally 24px, with 36px page gutters. The primary inventory and secondary context have different proportions. Mobile at 760px replaces the rail with five bottom destinations, includes safe-area insets, and uses 18px gutters. Overview summary precedes resource rows on mobile.
+The desktop shell uses a 232px navigation rail, a unified AppBar and fluid content capped at 1540px. A narrower desktop rail is 204px. The inventory is primary, with cost and runtime context beside it on wide screens. Settings uses a smaller readable maximum width.
 
-**The Context Rule.** Region selection filters resources without inventing geographic coordinates. The topology is an inventory relationship diagram, not a map or live network visualization.
+At 760px the rail becomes an 80px bottom navigation bar. A selected icon sits in a tonal capsule above its label. The page title, back action and refresh control share one AppBar, which stays visible while scrolling a detail page. Phone region choices form a compact horizontal strip, and cost/runtime summaries precede resource rows. Mobile resource rows keep the name, type, state and disclosure; the independent detail page contains the full specification.
+
+Resource details are a dedicated history route. Opening from overview returns to overview; opening from the filtered resource list restores its filter, scroll and focused row. Desktop details use the same navigation model, with facts and actions organized in two columns when space permits.
+
+Browser safe-area insets are applied once. In Android the native container consumes system bars, cutout and IME; CSS safe-area values are zero. Dialog height follows the visible viewport and its content scrolls above the keyboard.
 
 ## Elevation & Depth
 
-Main surfaces use one subtle border and a slightly raised background. Shadows are reserved for protected-focus dialogs and temporary notifications. No decorative blur, neon bloom or repeating grid wallpaper.
+Tonal surfaces group the interface without a shadow on every container. Thin separators clarify rows and fields. Dialogs and temporary feedback are the only floating surfaces with shadows. There is no glow, glass wallpaper or decorative telemetry.
 
 ## Shapes
 
-Panels use moderately rounded corners, with smaller radii for controls. Icon containers are compact squares; status indicators are small dots accompanied by words. Lucide icons use a consistent thin outline weight. The product mark is an authored geometric SVG.
+Rounded groups define the native feel: 24px panels, 20px compact groups, 16px fields and row edges, and 28px dialogs. Closely related resource rows have small internal joins and rounded outer edges. Buttons are 48px tall capsules; icon buttons have a 48px circular target.
+
+Lucide line icons share a consistent stroke. The restrained brand mark is the only authored iconography. Small status chips remain visually subordinate to resource names and task controls.
 
 ## Components
 
-Buttons expose focus, loading and disabled states. Primary controls use dark text on pale blue; destructive confirmation uses a separate red surface. Native HTML dialogs provide protected focus for two-phase operations and explicit local data removal.
+**The Confirmation Rule.** Every cloud mutation requires server prepare, readable effect review and an explicit execute action. Dangerous operations require the exact resource name. Expired or offline confirmations cannot execute; retries retain their idempotency key. Closing or navigating never submits an operation.
 
-Resource rows are semantic buttons with complete accessible names. Charts provide daily tables and break the line at missing days. NLB listener and backend topology uses server-returned names, protocols and health; unknown health remains unknown.
+Modal browser/Android back closes the top layer before leaving a resource. Busy prepare/execute cannot be dismissed. Dialogs trap focus through native HTML dialog behavior, lock document scrolling, and restore focus on closing. The detail page uses a short visible slide transition, disabled by reduced-motion preferences.
 
-Offline banners always state the snapshot time and disabled operation state. Login retains an explicit entry into saved snapshots. Server onboarding requires a fresh HTTP opt-in when the address changes.
+Refresh shows start, collection, completion and failure feedback, with an explicit retry path. Session expiry and malformed snapshots expose recovery; stale cross-server responses and responses from before an offline event cannot restore action availability. Resume only revalidates read-only state.
+
+Settings confirms logout before revocation and states that offline snapshots are retained. Removing local snapshots has its own confirmation. Offline snapshots always show their timestamp and read-only state.
 
 ## Do's and Don'ts
 
-- **Do** preserve stable alignment, Chinese control labels and keyboard focus.
-- **Do** keep actual units and independent observation timestamps visible.
-- **Do** respect reduced motion and native safe areas.
-- **Don't** add fake telemetry, decorative mini-charts or geographic locations.
-- **Don't** imply monitoring is billable traffic, or forecasts enforce hard caps.
-- **Don't** remove the offline and demo provenance banners.
+- Use the same theme, component vocabulary and independent detail navigation in browser and Android.
+- Keep readable task text, 48px targets, native-safe insets and reduced-motion behavior.
+- Preserve explicit demo, offline, partial-error and unknown-result states.
+- Do not reproduce Fluxdo content, assets or Flutter code.
+- Do not imply snapshots are live, monitoring is exact billable traffic, or cost forecasts are hard spending caps.

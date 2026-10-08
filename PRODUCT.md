@@ -15,7 +15,7 @@ An account operator checks a desktop dashboard during normal work, and uses the 
 - Never imply monitoring estimates are exact billable traffic or budget hard caps. Cloud credentials remain on the server.
 
 ## Design constraints
-Restrained sci-fi operational UI, charcoal/navy slate with ice blue and teal. Clear Chinese typography, precise resource diagrams, accessible contrast, keyboard use and mobile safe areas. No neon clutter. Honest empty, stale, partial-error and reconnect states are first-class.
+User-selected Fluxdo native Material 3 direction across browser and Android: tonal surface hierarchy, rounded grouped rows, clear AppBar and selected navigation capsules, built-in system fonts, readable 15–16px task text and 48px targets. Default follows the system, with manual light/dark themes. Preserve a restrained ocean accent and the existing geometric mark, accessible contrast, keyboard use, responsive desktop layouts and mobile safe areas. Honest empty, stale, partial-error and reconnect states are first-class.
 
 ## Working assumptions
 The explicit implementation brief supplies the product context and authorizes proceeding without an additional interview or agent delegation. No marketing claims, fake telemetry, account identifiers or public IP fixtures belong in shipped UI.

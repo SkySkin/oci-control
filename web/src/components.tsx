@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { dismissTopLayer, registerBackLayer } from './navigation';
 import type { ReactNode } from 'react';
 import { AlertCircle, ArrowDownToLine, Check, ChevronRight, Cloud, Database, Globe2, HardDrive, Network, Server, ShieldCheck, X } from 'lucide-react';
 import type { Region, Resource, ResourceKind } from './types';
@@ -17,16 +18,38 @@ export function Empty({ title, children, action }: { title: string; children?: R
   return <div className="empty-state"><div className="empty-mark"><Cloud size={28} aria-hidden="true" strokeWidth={1.25} /></div><h3>{title}</h3>{children && <p>{children}</p>}{action}</div>;
 }
 export function ErrorNotice({ children }: { children: ReactNode }) { return <div className="notice danger" role="alert"><AlertCircle size={18} aria-hidden="true" /><div>{children}</div></div>; }
-export function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
+export function Modal({ title, children, onClose, busy = false }: { title: string; children: ReactNode; onClose: () => void; busy?: boolean }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const callbacks = useRef({ onClose, busy });
+  callbacks.current = { onClose, busy };
   const id = useId();
+  const close = () => { if (!callbacks.current.busy && !dismissTopLayer()) callbacks.current.onClose(); };
   useEffect(() => {
     const dialog = ref.current!;
     const previous = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     dialog.showModal();
-    return () => { dialog.close(); previous?.focus(); };
+    // Prefer the safe action, never autofocus a destructive confirmation.
+    (dialog.querySelector('[autofocus]') as HTMLElement | null)?.focus();
+    let disposed = false;
+    let unregister: (() => void) | undefined;
+    void Promise.resolve().then(() => {
+      if (!disposed) unregister = registerBackLayer(() => callbacks.current.onClose(), () => callbacks.current.busy);
+    });
+    const viewport = window.visualViewport;
+    const resize = () => {
+      dialog.style.setProperty('--viewport-height', `${viewport?.height || window.innerHeight}px`);
+      if (dialog.contains(document.activeElement)) (document.activeElement as HTMLElement)?.scrollIntoView?.({ block: 'nearest' });
+    };
+    resize(); viewport?.addEventListener('resize', resize);
+    return () => {
+      disposed = true; unregister?.(); viewport?.removeEventListener('resize', resize);
+      dialog.close(); document.body.style.overflow = overflow;
+      if (previous?.isConnected) previous.focus({ preventScroll: true });
+    };
   }, []);
-  return <dialog ref={ref} className="modal" aria-labelledby={id} onCancel={event => { event.preventDefault(); onClose(); }}><div className="modal-heading"><h2 id={id}>{title}</h2><button type="button" className="icon-button" aria-label="关闭对话框" onClick={onClose}><X size={20} /></button></div>{children}</dialog>;
+  return <dialog ref={ref} className="modal" aria-labelledby={id} aria-busy={busy} onCancel={event => { event.preventDefault(); close(); }}><div className="modal-heading"><h2 id={id}>{title}</h2><button type="button" className="icon-button" aria-label="关闭对话框" disabled={busy} onClick={close}><X size={22} /></button></div>{children}</dialog>;
 }
 
 export function RegionAtlas({ regions, selected, onSelect }: { regions: Region[]; selected: string; onSelect: (id: string) => void }) {
@@ -61,10 +84,10 @@ export function DataChart({ points, format, label, tone = 'blue' }: { points: Po
 
 export function ResourceTable({ resources, onSelect, compact = false }: { resources: Resource[]; onSelect: (r: Resource) => void; compact?: boolean }) {
   if (!resources.length) return <Empty title="没有匹配的资源">尝试切换区域、类型或搜索词。只显示当前账号已授权的资源。</Empty>;
-  return <div className="resource-list"><div className={`resource-table-heading ${compact ? 'compact' : ''}`} aria-hidden="true"><span>资源名称 / 类型</span><span>区域</span><span>状态</span>{!compact && <span>规格 / 容量</span>}<span /></div>{resources.map(resource => <button className={`resource-row ${compact ? 'compact' : ''}`} key={resource.id} onClick={() => onSelect(resource)} aria-label={`查看 ${resource.name}，${kindNames[resource.kind]}，${stateLabel(resource.state)}`}><div className="resource-name"><span className={`resource-symbol ${resource.kind}`}><ResourceIcon kind={resource.kind} /></span><span><strong>{resource.name}</strong><small>{kindNames[resource.kind]}</small></span></div><span className="resource-region">{resource.region}</span><StateBadge state={resource.state} />{!compact && <span className="resource-spec">{resource.shape || (resource.sizeGb != null ? `${number(resource.sizeGb)} GB` : '—')}</span>}<ChevronRight className="row-chevron" size={16} aria-hidden="true" /></button>)}</div>;
+  return <div className="resource-list"><div className={`resource-table-heading ${compact ? 'compact' : ''}`} aria-hidden="true"><span>资源名称 / 类型</span><span>区域</span><span>状态</span>{!compact && <span>规格 / 容量</span>}<span /></div>{resources.map(resource => <button className={`resource-row ${compact ? 'compact' : ''}`} key={resource.id} id={`resource-${encodeURIComponent(resource.id)}`} onClick={() => onSelect(resource)} aria-label={`查看 ${resource.name}，${kindNames[resource.kind]}，${stateLabel(resource.state)}`}><div className="resource-name"><span className={`resource-symbol ${resource.kind}`}><ResourceIcon kind={resource.kind} /></span><span><strong>{resource.name}</strong><small>{kindNames[resource.kind]}</small></span></div><span className="resource-region">{resource.region}</span><StateBadge state={resource.state} />{!compact && <span className="resource-spec">{resource.shape || (resource.sizeGb != null ? `${number(resource.sizeGb)} GB` : '—')}</span>}<ChevronRight className="row-chevron" size={16} aria-hidden="true" /></button>)}</div>;
 }
 
-export function ResourceDetail({ resource, canOperate, allowedActions, onAction, onClose }: { resource: Resource; canOperate: boolean; allowedActions: string[]; onAction: (action: string) => void; onClose: () => void }) {
+export function ResourceDetail({ resource, canOperate, allowedActions, onAction }: { resource: Resource; canOperate: boolean; allowedActions: string[]; onAction: (action: string) => void }) {
   const fields = [
     ['区域', resource.region], ['区间', resource.compartment], ['规格', resource.shape],
     ['OCPU', resource.ocpus == null ? undefined : number(resource.ocpus, 2)],
@@ -73,10 +96,10 @@ export function ResourceDetail({ resource, canOperate, allowedActions, onAction,
     ['创建时间', resource.createdAt ? dateTime(resource.createdAt) : undefined],
     ['公共 IP', resource.publicIps?.join('、')], ['私有 IP', resource.privateIps?.join('、')],
   ].filter(([, value]) => value);
-  return <aside className="resource-detail" aria-label={`${resource.name} 详情`}><div className="detail-heading"><span className="resource-symbol"><ResourceIcon kind={resource.kind} size={23} /></span><button className="icon-button" aria-label="关闭资源详情" onClick={onClose}><X size={19} /></button></div><h2>{resource.name}</h2><div className="detail-status"><span>{kindNames[resource.kind]}</span><StateBadge state={resource.state} /></div><dl className="detail-fields">{fields.map(([key, value]) => <div key={key}><dt>{key}</dt><dd>{value}</dd></div>)}</dl><details className="resource-id"><summary>资源标识</summary><code>{resource.id}</code></details>{resource.kind === 'instance' && <div className="detail-metrics"><div><span>CPU</span><strong>{resource.cpuPercent == null ? '暂无数据' : `${number(resource.cpuPercent, 1)}%`}</strong></div><div><span>内存使用</span><strong>{resource.memoryPercent == null ? '暂无数据' : `${number(resource.memoryPercent, 1)}%`}</strong></div><div><span>监测出站流量</span><strong>{bytes(resource.networkBytesOut)}</strong></div></div>}
+  return <section className="resource-detail" aria-label={`${resource.name} 详情`}><div className="detail-heading"><span className="resource-symbol"><ResourceIcon kind={resource.kind} size={23} /></span></div><h2>{resource.name}</h2><div className="detail-status"><span>{kindNames[resource.kind]}</span><StateBadge state={resource.state} /></div><dl className="detail-fields">{fields.map(([key, value]) => <div key={key} className={['规格', '区间', '创建时间', '公共 IP', '私有 IP'].includes(key || '') ? 'wide-field' : undefined}><dt>{key}</dt><dd>{value}</dd></div>)}</dl><details className="resource-id"><summary>资源标识</summary><code>{resource.id}</code></details>{resource.kind === 'instance' && <div className="detail-metrics"><div><span>CPU</span><strong>{resource.cpuPercent == null ? '暂无数据' : `${number(resource.cpuPercent, 1)}%`}</strong></div><div><span>内存使用</span><strong>{resource.memoryPercent == null ? '暂无数据' : `${number(resource.memoryPercent, 1)}%`}</strong></div><div><span>监测出站流量</span><strong>{bytes(resource.networkBytesOut)}</strong></div></div>}
     {(resource.kind === 'nlb' || resource.kind === 'lb') && <NetworkTopology details={resource.details} />}
     <div className="detail-actions"><h3>资源操作</h3><p>{canOperate ? '提交前将读取当前状态，并生成操作预览。' : '当前为只读视图。连接并登录后可准备操作。'}</p><div className="action-buttons">{allowedActions.length ? allowedActions.map(action => <button key={action} className={`button secondary ${action.includes('stop') || action.includes('disable') ? 'danger-text' : ''}`} disabled={!canOperate} onClick={() => onAction(action)}>{action === 'instance.start' ? <Check size={16} aria-hidden="true" /> : action === 'instance.stop' ? <ArrowDownToLine size={16} aria-hidden="true" /> : <ShieldCheck size={16} aria-hidden="true" />}{({ 'instance.start': '启动', 'instance.stop': '停止', 'instance.reboot': '重启', 'instance.rename': '重命名', 'nlb.backend.enable': '启用后端', 'nlb.backend.disable': '停用后端' } as Record<string, string>)[action]}</button>) : <span className="muted">此资源暂不支持可用操作</span>}</div></div>
-  </aside>;
+  </section>;
 }
 
 function NetworkTopology({ details }: { details?: Record<string, unknown> }) {

@@ -1,6 +1,6 @@
 # 安装与运行
 
-本文适用于 **云境 OCI Control 0.1.0**。示例域名与地址均为占位示例。所有运行数据和秘密必须放在代码目录之外；公开仓库中不要保存真实部署信息。
+本文适用于 **云境 OCI Control 0.2.0**。示例域名与地址均为占位示例。所有运行数据和秘密必须放在代码目录之外；公开仓库中不要保存真实部署信息。
 
 ## 选择方式
 
@@ -97,7 +97,7 @@ ingress:
 
 服务使用 `OCI_CONTROL_PUBLIC_URL=https://oci.example.com`、`OCI_CONTROL_ALLOW_HTTP=false`。将 `cloudflared` 注册为操作系统服务；不要把 Tunnel token 写进项目文件、截图或日志。公网 URL 应稳定，临时 quick tunnel 地址不适合长期会话与 Android 配置。
 
-Tunnel 只提供网络入口，不替代面板登录。额外启用 Cloudflare Access 浏览器挑战时，原生 Android API 请求可能无法通过；0.1.0 没有 Access 服务令牌集成，不能把 Cloudflare 服务令牌塞入前端或 APK。请选择与原生 API 兼容的入口策略。
+Tunnel 只提供网络入口，不替代面板登录。额外启用 Cloudflare Access 浏览器挑战时，原生 Android API 请求可能无法通过；0.2.0 没有 Access 服务令牌集成，不能把 Cloudflare 服务令牌塞入前端或 APK。请选择与原生 API 兼容的入口策略。
 
 ## Docker Compose
 
@@ -181,6 +181,14 @@ WantedBy=multi-user.target
 
 改密码使用相同数据目录执行 `python -m server configure`，然后重启服务；服务按密码摘要失效规则撤销旧会话。单次退出只撤销当前会话。丢失设备时应更换面板密码并确认其他客户端重新登录。
 
+## 界面、返回与升级
+
+网页与 Android 使用同一套 Material 3 风格组件，并按屏幕宽度适配。默认跟随系统浅色／深色，也可在设置中手动指定；此偏好只保存在本机。点击资源进入独立详情页，返回恢复来源页面的筛选和滚动位置。Android 返回键先关闭最上层弹窗，再退出详情，最后返回总览；总览再次返回会将应用放到后台。云操作提交期间不会因返回而发起重复操作。
+
+所有会修改云资源的操作仍需先生成预览，再点“确认执行”；停止、重启和 NLB 后端排空还需输入完整资源名。离线只显示旧快照，不会执行或排队操作。
+
+升级 Android 请直接安装同包名、同签名的新 APK，保留已保存的服务器、会话及快照；无需卸载旧版。若系统提示签名不一致，应先核对安装的是正式包还是调试包，不要为了升级清除应用数据。网页版更新后重新加载即可；已打开的旧标签页在重新加载前可能仍运行旧界面。
+
 ## Android 构建
 
 原生包使用 Capacitor **7.6.9**，正式应用 ID `com.ocicontrol.app`，名称“云境 OCI Control”。`mobile/capacitor.config.json` 指向 `../web/dist`，不加载远程 `server.url`；`CapacitorHttp` 只用于显式请求，关闭重定向并校验服务器 origin。TLS 证书验证保持开启，自签名证书需在设备信任策略中正确部署，不能通过跳过证书校验解决。
@@ -197,7 +205,7 @@ npm run build:debug --prefix mobile
 
 结果位于 `mobile/android/app/build/outputs/apk/debug/app-debug.apk`。原生 AES-GCM 单元测试验证随机 nonce、篡改拒绝和跨服务器密文隔离，随 `testDebugUnitTest` 执行。Keystore 仪器测试是独立的设备验证：连接专用测试设备后在 `mobile/android` 执行 `./gradlew connectedDebugAndroidTest`；不使用云端凭据。
 
-本仓库的 `.github/workflows/ci.yml` 在 push、PR、手动触发时先运行 Python/网页/原生包约束测试、网页构建、Compose 校验和秘密扫描，再并行检查 Docker、构建 Android。Android 下载同次运行的网页产物后同步，避免在共享 checkout 中并发改写网页构建输出。默认同时生成 `oci-control-0.1.0-debug-apk` 和 `oci-control-0.1.0-unsigned-release-apk`，均包含 APK 和 `SHA256SUMS`，保留 14 天；需要 GitHub 登录下载 Actions 产物。未签名 release 经过 SDK `zipalign -c -P 16 -v 4` 校验，文件名为 `app-release-unsigned.apk`，签名前不能安装。工作流不自动发布 GitHub Release，默认构建不使用任何 GitHub Secrets。
+本仓库的 `.github/workflows/ci.yml` 在 push、PR、手动触发时先运行 Python/网页/原生包约束测试、网页构建、Compose 校验和秘密扫描，再并行检查 Docker、构建 Android。Android 下载同次运行的网页产物后同步，避免在共享 checkout 中并发改写网页构建输出；随后在 API 35 模拟器上运行 Keystore、主题和系统键盘／安全区测试，测试报告作为独立产物保留。默认同时生成 `oci-control-0.2.0-debug-apk` 和 `oci-control-0.2.0-unsigned-release-apk`，均包含 APK 和 `SHA256SUMS`，保留 14 天；需要 GitHub 登录下载 Actions 产物。未签名 release 经过 SDK `zipalign -c -P 16 -v 4` 校验，文件名为 `oci-control-0.2.0-unsigned.apk`，签名前不能安装。工作流不自动发布 GitHub Release，默认构建不使用任何 GitHub Secrets。
 
 ```bash
 gh workflow run ci.yml
@@ -205,7 +213,7 @@ gh workflow run ci.yml
 
 默认调试包的 ID 是 `com.ocicontrol.app.debug`，可与正式包并存。CI 每次的临时调试签名可能不同，旧调试包不一定能覆盖升级；卸载后重装会清除其本地数据。不要将调试包描述为正式签名发行版。
 
-正式交付采用 **CI 构建未签名 APK → 本地签名**。签名私钥及密码仅保留在维护者本地的安全目录，不上传 GitHub，也不配置 GitHub Secrets。使用固定的本地 Android 签名 keystore 并单独备份；后续升级必须使用同一密钥。下载成功运行的 `oci-control-0.1.0-unsigned-release-apk` 后，在仓库外的产物目录核验和签名：
+正式交付采用 **CI 构建未签名 APK → 本地签名**。签名私钥及密码仅保留在维护者本地的安全目录，不上传 GitHub，也不配置 GitHub Secrets。使用固定的本地 Android 签名 keystore 并单独备份；后续升级必须使用同一密钥。下载成功运行的 `oci-control-0.2.0-unsigned-release-apk` 后，在仓库外的产物目录核验和签名：
 
 ```bash
 # 在已解压的产物目录中操作；替换路径和 alias，密码通过交互终端输入。
@@ -213,15 +221,15 @@ sha256sum -c SHA256SUMS
 java -jar /path/to/android-sdk/build-tools/35.0.0/lib/apksigner.jar sign \
   --ks /absolute/private/path/oci-control-release.jks \
   --ks-key-alias oci-control \
-  --out oci-control-0.1.0.apk app-release-unsigned.apk
+  --out oci-control-0.2.0.apk oci-control-0.2.0-unsigned.apk
 java -jar /path/to/android-sdk/build-tools/35.0.0/lib/apksigner.jar verify \
-  --verbose --print-certs oci-control-0.1.0.apk
-sha256sum oci-control-0.1.0.apk > SIGNED-SHA256SUMS
+  --verbose --print-certs oci-control-0.2.0.apk
+sha256sum oci-control-0.2.0.apk > SIGNED-SHA256SUMS
 ```
 
 本地签名可使用 Java 17 与官方 SDK 的 `apksigner.jar`，无需重建网页或在 ARM 主机运行 x86_64 构建工具。CI 已检查对齐，签名后不要重新 zipalign 或修改 APK。核对验证输出中的公开签名证书指纹与维护者保留的指纹一致，再交付签名 APK 及其校验和；不交付 keystore、密码或签名环境。不要将密码放入命令参数或仓库文件。
 
-工作流保留一个可选的 GitHub 托管签名入口，供选择不同信任策略的部署使用，**本项目此次交付不启用**。它要求在 GitHub Actions Secrets 配置 `ANDROID_KEYSTORE_BASE64`、`ANDROID_KEYSTORE_PASSWORD`、`ANDROID_KEY_ALIAS`、`ANDROID_KEY_PASSWORD`，再在 `main` 手动触发 `signed_release=true`。产物名 `oci-control-0.1.0-signed-release-apk`；临时签名文件会清理。Base64 只是编码，不是加密；显式请求该方式但缺少 Secrets 会失败。
+工作流保留一个可选的 GitHub 托管签名入口，供选择不同信任策略的部署使用，**本项目此次交付不启用**。它要求在 GitHub Actions Secrets 配置 `ANDROID_KEYSTORE_BASE64`、`ANDROID_KEYSTORE_PASSWORD`、`ANDROID_KEY_ALIAS`、`ANDROID_KEY_PASSWORD`，再在 `main` 手动触发 `signed_release=true`。产物名 `oci-control-0.2.0-signed-release-apk`；临时签名文件会清理。Base64 只是编码，不是加密；显式请求该方式但缺少 Secrets 会失败。
 
 Android 使用服务器规范 origin 存储非秘密的连接设置，bearer 只交给 `SecureSession`，由 Android Keystore 密钥加密保存。系统备份和设备迁移排除应用数据，避免复制加密凭证或快照。退出保留服务器与快照；需要抹去本机资源资料时另外清除本地数据。
 

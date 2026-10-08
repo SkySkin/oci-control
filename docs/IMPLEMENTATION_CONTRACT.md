@@ -4,8 +4,8 @@ Product name **OCI Control / 云境**. Python 3.10+ FastAPI server in `server/` 
 
 ## API (root implements)
 
-- GET `/api/health` public returns `{status:"ok",version:"0.1.0"}` (no secrets).
-- GET `/api/session` returns `{authenticated:boolean,csrfToken?:string,serverId?:string,version:"0.1.0",mode:"live"|"demo"}`. Authenticated response also `capabilities:{actions:["instance.start","instance.stop","instance.reboot","instance.rename","nlb.backend.enable","nlb.backend.disable"]}`.
+- GET `/api/health` public returns `{status:"ok",version:"0.2.0"}` (no secrets).
+- GET `/api/session` returns `{authenticated:boolean,csrfToken?:string,serverId?:string,version:"0.2.0",mode:"live"|"demo"}`. Authenticated response also `capabilities:{actions:["instance.start","instance.stop","instance.reboot","instance.rename","nlb.backend.enable","nlb.backend.disable"]}`.
 - POST `/api/login` JSON `{password:string,client:"web"|"android"}` returns `{authenticated:true,csrfToken:string,serverId:string,token?:string}`. Web gets HttpOnly host-only session cookie, token returned ONLY for android/native login. Android uses bearer, web unsafe calls use `X-CSRF-Token`. Browser JSON requests must pass same-origin validation; native HTTP no Origin permitted. Login rate limited. Persistent revocable 90-day renewable server sessions; secret digest changes invalidate all.
 - POST `/api/logout` revokes current session; snapshots retained locally but require explicit offline-view UX. Web may display prior snapshot offline before server auth check; no cloud action offline. Separate clear local data button.
 - GET `/api/snapshot` returns snapshot below; initial unavailable returns 503 with error object and retry hint. GET `/api/status` authenticated setup status `{configured:boolean,cliInstalled:boolean,refreshing:boolean,lastError:string|null,lastRefreshAt:string|null}`. No secrets.
@@ -39,3 +39,11 @@ No missing metric becomes fake zero. Do not add NLB processed bytes to instance/
 ## Android bridge (platform agent implements; frontend consumes)
 
 Capacitor local bundled web, user enters server URL. Native `CapacitorHttp` API for requests (no server-wide CORS needed). Native Keystore custom plugin **SecureSession** with `{set({key,value}),get({key})->{value:string|null},remove({key})}`. Detect `window.Capacitor` platform via `@capacitor/core`; frontend can registerPlugin to access secure plugin. Persist nonsecret server URL and snapshots locally, bearer only secure plugin. App retains server and snapshots on logout; does not send queued mutations after reconnect. On network failure show timestamped last-known data. Explicit warning/opt-in for http:// connection; reject invalid URLs, credentials-in-URL, non-http(s), unexpected redirects. Server identity from session scopes cache; never mix accounts. Frontend can import Capacitor core v7 or compatible agreed version; platform agent communicates final version. Android build workflow produces installable APK with persistent release signing from GH secrets when set, otherwise clearly labeled debug artifact. No private keystore in git.
+
+## Shared interface and native navigation (0.2.0)
+
+Web and Android render the same Material 3 inspired interface with system/light/dark preferences. Resource details are dedicated routes, preserving the source route, resource filters and scroll/focus on return. All six cloud actions retain prepare/execute confirmation; stop/reboot/drain require exact resource-name entry. No operation is replayed on resume or network recovery.
+
+Android uses `@capacitor/app` 7.1.2 for backButton/resume. Back consumes the uppermost modal first (blocked while submitting), then resource detail, then a non-overview destination; at the root it calls minimizeApp. Resume only revalidates the session and reads data.
+
+`NativeChrome.setTheme({theme:"light"|"dark", backgroundColor:"#RRGGBB"})` receives the resolved Web appearance; it never changes the system night-mode preference. Native owns the union of system bars, cutout and IME insets; Capacitor auto margins are disabled and native Web CSS safe-area padding is zero. Browser CSS still respects its own safe-area insets.

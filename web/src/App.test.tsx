@@ -39,6 +39,7 @@ describe('offline and session lifecycle', () => {
     await waitFor(() => expect(readSnapshot(window.location.origin)).not.toBeNull());
     fireEvent.click(screen.getByRole('button', { name: '设置' }));
     fireEvent.click(screen.getByRole('button', { name: '退出登录' }));
+    fireEvent.click(await screen.findByRole('button', { name: '确认退出' }));
     await screen.findByRole('heading', { name: '进入控制台' });
     expect(fetch.mock.calls.some(([path]) => path === '/api/logout')).toBe(true);
     expect(readSnapshot(window.location.origin)?.serverId).toBe(fixture().serverId);

@@ -44,3 +44,32 @@ describe('honest missing metrics', () => {
     expect(number(0)).toBe('0');
   });
 });
+
+it('rejects malformed nested data without coercing it to zero', () => {
+  for (const field of ['regions', 'resources', 'alerts', 'errors'] as const) expect(isSnapshot({ ...fixture(), [field]: [null] })).toBe(false);
+  expect(isSnapshot({ ...fixture(), traffic: { ...fixture().traffic, daily: [null] } })).toBe(false);
+  expect(isSnapshot({ ...fixture(), cost: { ...fixture().cost, daily: [null] } })).toBe(false);
+  expect(isSnapshot({ ...fixture(), cost: { ...fixture().cost, byService: [{ name: 'bad', amount: '0' }] } })).toBe(false);
+  expect(isSnapshot({ ...fixture(), resources: [{ ...fixture().resources[0], publicIps: [null] }] })).toBe(false);
+});
+it('accepts unavailable official quantities and units and rejects corrupted cached elements', () => {
+  const snapshot = fixture();
+  snapshot.traffic.officialUnit = null;
+  snapshot.traffic.officialSkus = [{ skuPartNumber: 'synthetic-sku', skuName: '合成计量', service: 'network', unit: 'GB', quantity: null }];
+  expect(isSnapshot(snapshot)).toBe(true);
+  saveSnapshot('https://example.test', snapshot);
+  const key = 'oci-control.snapshot.v1.data.https%3A%2F%2Fexample.test.synthetic-account-a';
+  localStorage.setItem(key, JSON.stringify({ ...snapshot, traffic: { ...snapshot.traffic, daily: [null] } }));
+  expect(readSnapshot('https://example.test')).toBeNull();
+});
+
+it('accepts collector NLB unknown health and absent listener targets, while rejecting wrong value types', () => {
+  const snapshot = fixture();
+  snapshot.resources[0].kind = 'nlb';
+  snapshot.resources[0].details = { backendSets: [{ name: 'synthetic-set', health: null, backends: [{ name: 'synthetic-backend', health: null }] }], listeners: [{ name: 'synthetic-listener', port: 443, protocol: 'TCP', defaultBackendSetName: null }] };
+  expect(isSnapshot(snapshot)).toBe(true);
+  snapshot.resources[0].details = { backendSets: [{ name: 'synthetic-set', health: 17 }] };
+  expect(isSnapshot(snapshot)).toBe(false);
+  snapshot.resources[0].details = { listeners: [{ name: 'synthetic-listener', defaultBackendSetName: {} }] };
+  expect(isSnapshot(snapshot)).toBe(false);
+});
